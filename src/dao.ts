@@ -38,7 +38,7 @@ export class DAO implements IStateful<IDAOState> {
 
   constructor(public address: Address, public context: Arc) {
 
-    this.address = address.toLowerCase()
+    this.address = address
 
     const query = gql`{
       dao(id: "${address}") {
@@ -74,14 +74,20 @@ export class DAO implements IStateful<IDAOState> {
   }
 
   public members(options: IMemberQueryOptions = {}): Observable<Member[]> {
-    // TODO: show only members from this DAO
+    let where = ''
+    for (const key of Object.keys(options)) {
+        where += `${key}: "${options[key] as string},\n"`
+    }
+
     const query = gql`{
-      reputationHolders {
+      members(where: {
+          ${where}
+        }) {
         id
       }
     }`
-    const itemMap = (item: any): Member => new Member(item.id, this.address)
-    return this.context._getObservableList(query, 'reputationHolders', itemMap) as Observable<Member[]>
+    const itemMap = (item: any): Member => new Member(item.id, this.address, this.context)
+    return this.context._getObservableList(query, 'members', itemMap) as Observable<Member[]>
   }
 
   public proposals(options: IProposalQueryOptions = {}): Observable<Proposal[]> {
@@ -104,10 +110,12 @@ export class DAO implements IStateful<IDAOState> {
           ${where}
         }) {
           id
+          proposer {
+            address
+          }
         }
       }
     `
-
     return this.context._getObservableList(
       query,
       'proposals',
@@ -143,8 +151,28 @@ export class DAO implements IStateful<IDAOState> {
     ) as Observable<Reward[]>
   }
 
-  public votes(options: IVoteQueryOptions = {}): Observable < IVote[] > {
+  public votes(options: IVoteQueryOptions = {}): Observable <IVote[]> {
     throw new Error('not implemented')
+    // let where = ''
+    // for (const key of Object.keys(options)) {
+    //   where += `${key}: "${options[key] as string},\n"`
+    // }
+
+    // const query = gql`
+    //   {
+    //     votes (where: {
+    //       ${where}
+    //     }) {
+    //       id
+    //     }
+    //   }
+    // `
+
+    // return this.context._getObservableList(
+    //   query,
+    //   'proposals',
+    //   (r: any) => new Vote(r.id, this.context)
+    // ) as Observable<IVote[]>
   }
 
   public stakes(options: IStakeQueryOptions = {}): Observable < IStake[] > {

@@ -1,6 +1,6 @@
 import gql from 'graphql-tag'
 import { Observable, of } from 'rxjs'
-
+import { map, switchMap } from 'rxjs/operators'
 import { Arc } from './arc'
 import { DAO } from './dao'
 import { Operation } from './operation'
@@ -167,22 +167,22 @@ export class Proposal implements IStateful<IProposalState> {
         // createdAt: item.createdAt,
         createdAt: item.createdAt, // TODO: Pending Subgraph implementation
         dao: new DAO(item.dao.id, this.context),
-        description: item.description, // TODO: Pending Subgraph implementation
-        ethReward: item.ethReward, // TODO: pending..
+        description: item.description,
+        ethReward: item.ethReward,
         executedAt: item.executedAt,
         externalTokenReward: item.externalTokenReward,
         id: item.id,
-        ipfsHash: item.ipfsHash, // TODO: Pending Subgraph implementation
-        proposer: item.proposer && item.proposer.id, // TODO: pending subgraph implementation
+        ipfsHash: item.ipfsHash,
+        proposer: item.proposer && item.proposer.id,
         quietEndingPeriodBeganAt: item.quietEndingPeriodBeganAt,
         reputationReward: item.reputationReward, // TODO: pending subgraph
         resolvedAt: item.resolvedAt, // TODO: Pending Subgraph implementation
         stage: item.stage,
         stakesAgainst: item.stakesAgainst,
         stakesFor: item.stakesFor,
-        title: item.title, // TODO: Pending Subgraph implementation
-        tokensReward: item.tokensReward, // TODO: pending..
-        url: item.url, // TODO: Pending Subgraph implementation
+        title: item.title,
+        tokensReward: item.tokensReward,
+        url: item.url,
         votesAgainst: item.votesFor,
         votesFor: item.votesAgainst,
         winningOutcome: item.winningOutcome
@@ -203,12 +203,11 @@ export class Proposal implements IStateful<IProposalState> {
   }
 
   public votes(options: IVoteQueryOptions = {}): Observable<IVote[]> {
-    throw new Error('not implemented')
-    // return this.dao().pipe(
-    //   switchMap((dao) => {
-    //     return dao.votes({ ...options, proposalId: this.id })
-    //   })
-    // )
+    return this.dao().pipe(
+      switchMap((dao) => {
+        return dao.votes({ ...options, proposalId: this.id })
+      })
+    )
   }
 
   public vote(outcome: ProposalOutcome): Operation<void> {
